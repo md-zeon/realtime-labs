@@ -26,34 +26,44 @@ Instead of relying on rigid, centralized structural recalculations (like Google 
 
 ## 🫀 Operational Lifecycle Mapping
 
-Data changes pass down the socket highway using continuous binary delta arrays (`Uint8Array`) to minimize footprint constraints.
+Data changes pass down the socket highway using compact binary delta arrays (`Uint8Array`) to minimize footprint and round-trip overhead.
 
+```text
 [ Next.js Client A ] ----(sync-update: Keystroke Delta)----> [ Express Backend Relay ]
-|
-(applyUpdate to Headless Doc)
-|
-v
+					  |
+					  | (applyUpdate to headless Y.Doc)
+					  v
+				  [ Headless Y.Doc ]
+					  |
+					  | (encoded update buffer)
+					  v
 [ Next.js Client B ] <---(sync-update: Binary Payload)-----------------+
+```
 
 ### The Synchronization Phase Matrix
 
-1. **The Handshake Handover:** Upon entering a workspace channel, the server generates a headless `Y.Doc` graph instance in memory if one does not exist.
-2. **State Vector Assessment (`sync-step-1`):** The server sends down its state outline vector map. The joining browser compares this map against its local history pool, instantly isolating exactly what operation packets are missing.
-3. **The Delta Reconciliation:** Missing edits are encoded as a compact binary update buffer, transmitted across the Socket.io pipeline, and stitched seamlessly into the peer graphs via `Y.applyUpdate()`.
+1. **The Handshake Handover:** When a client joins a workspace channel, the server ensures an in-memory headless `Y.Doc` exists for that channel.
+2. **State Vector Assessment (`sync-step-1`):** The server and client exchange state vectors to determine which updates each side is missing.
+3. **The Delta Reconciliation:** The missing updates are encoded into a compact binary buffer and sent over the socket; clients call `Y.applyUpdate()` to merge the changes idempotently.
 
 ---
 
 ## 🛠️ File Layout
 
+The repository layout for this module (top-level):
+
+```text
 02-collaborative-text/
 ├── backend/
-│ ├── server.js # Direct Node server hosting raw headless Yjs states
-│ └── package.json
+│   ├── server.js         # Node server hosting headless Yjs states
+│   └── package.json
 ├── frontend/
-│ ├── app/
-│ │ └── page.js # Split editor viewport & Yjs state diagnostics telemetry
-│ └── package.json
+│   ├── app/
+│   │   └── page.js       # Editor viewport & Yjs telemetry
+│   ├── public/           # Static assets served by Next.js
+│   └── package.json
 └── README.md
+```
 
 ---
 
