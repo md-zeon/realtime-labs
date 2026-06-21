@@ -4,7 +4,7 @@ This lab module establishes a foundational understanding of **WebSockets** and *
 
 Instead of jumping directly into complex text-editor synchronization, this project isolates the raw network signaling layer. It implements a decoupled client-server architecture tracking system presence and status switches in real-time across concurrent browser sessions.
 
----
+![Realtime Signals architecture](./Realtime%20Signals.png)
 
 ## 📚 Architectural Theory Focus
 
