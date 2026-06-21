@@ -95,17 +95,47 @@ export default function CollaborativeWorkspace() {
     const yText = yTextRef.current;
     const currentStringValue = yText.toString();
 
-    // Mathematically deduce what changed between old text state and new text state
-    // and commit those specific changes to the Yjs graph structure
-    if (nextStringValue.length > currentStringValue.length) {
-      // User inserted text
-      const indexPosition = e.target.selectionStart - 1;
-      const insertedCharacter = nextStringValue[indexPosition];
-      yText.insert(indexPosition, insertedCharacter);
-    } else if (nextStringValue.length < currentStringValue.length) {
-      // User deleted text
-      const indexPosition = e.target.selectionStart;
-      yText.delete(indexPosition, 1);
+    // If the Yjs text instance is not yet initialized or the string hasn't changed, do nothing
+    if (!yText || nextStringValue === currentStringValue) return;
+
+    // Diff the full string so selection deletes, pastes, and replacements
+    // are mirrored into the Yjs document correctly.
+    let prefixLength = 0;
+    // Find the longest common prefix between the current and next string values
+    while (
+      prefixLength < currentStringValue.length &&
+      prefixLength < nextStringValue.length &&
+      currentStringValue[prefixLength] === nextStringValue[prefixLength]
+    ) {
+      prefixLength += 1;
+    }
+
+    let currentSuffixLength = currentStringValue.length;
+    let nextSuffixLength = nextStringValue.length;
+
+    // Find the longest common suffix between the current and next string values
+    while (
+      currentSuffixLength > prefixLength &&
+      nextSuffixLength > prefixLength &&
+      currentStringValue[currentSuffixLength - 1] ===
+        nextStringValue[nextSuffixLength - 1]
+    ) {
+      currentSuffixLength -= 1;
+      nextSuffixLength -= 1;
+    }
+
+    // Calculate the number of characters to delete and the text to insert
+    const deleteCount = currentSuffixLength - prefixLength;
+    const insertedText = nextStringValue.slice(prefixLength, nextSuffixLength);
+
+    // Apply the changes to the Yjs text instance
+    if (deleteCount > 0) {
+      yText.delete(prefixLength, deleteCount);
+    }
+
+    // Insert the new text at the correct position
+    if (insertedText.length > 0) {
+      yText.insert(prefixLength, insertedText);
     }
   };
 
